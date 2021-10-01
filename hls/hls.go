@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"os/exec"
+	"path/filepath"
 	"strconv"
 	"strings"
 
@@ -29,17 +29,17 @@ func MakeProgram(c *config.Config) (*Program, error) {
 		start: 0,
 	}
 	ShuffleTank()
-	avg := p.tank.ds[len(p.tank.ds) - 1].Minutes() / float64(len(p.tank.ds))
+	avg := p.tank.ds[len(p.tank.ds)-1].Minutes() / float64(len(p.tank.ds))
 	p.end = int(c.Duration().Minutes() / avg)
 	if p.end == 0 {
 		p.end = 1
 	}
 	if l := len(p.tank.cs); p.end > l {
 		p.end = l
-	} else if d := p.tank.ds[p.end - 1]; d < c.Duration() {
+	} else if d := p.tank.ds[p.end-1]; d < c.Duration() {
 		for p.end <= l && d < c.Duration() {
 			p.end++
-			d = p.tank.ds[p.end - 1]
+			d = p.tank.ds[p.end-1]
 		}
 	}
 	return p, nil
@@ -74,7 +74,7 @@ func CopyWithTime(src, dst string, sec int) error {
 		switch exts[0] {
 		case "#EXT-X-VERSION":
 			dstStr += exts[0] + ":6\n"
-			dstStr += "#EXT-X-START:TIME-OFFSET=" +  strconv.Itoa(sec) + ",PRECISE=YES\n"
+			dstStr += "#EXT-X-START:TIME-OFFSET=" + strconv.Itoa(sec) + ",PRECISE=YES\n"
 		default:
 			dstStr += exts[0]
 			for _, ext := range exts[1:] {
@@ -134,7 +134,7 @@ func (p *Program) Write(filename string) error {
 			if l == "" {
 				continue
 			} else if l == "#EXT-X-ENDLIST" {
-				if i != len(cs) - 1 {
+				if i != len(cs)-1 {
 					str += "#EXT-X-DISCONTINUITY\n"
 				} else {
 					str += l + "\n"

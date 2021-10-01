@@ -182,7 +182,7 @@ func readConfig(filename string) ([]int, []int, map[string]struct{}) {
 		case "ignore":
 			// FIXME: what if filenames contain '"'?
 			for _, w := range words[1:] {
-				skip[w] =  struct{}{}
+				skip[w] = struct{}{}
 			}
 		}
 	}

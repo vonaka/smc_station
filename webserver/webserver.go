@@ -3,9 +3,9 @@ package webserver
 import (
 	"log"
 	"net/http"
+	"path/filepath"
 	"strings"
 	"sync"
-	"path/filepath"
 	"time"
 
 	"github.com/gorilla/websocket"
@@ -23,7 +23,7 @@ var (
 	serverLock sync.Mutex
 	wsUpgrader = websocket.Upgrader{
 		HandshakeTimeout: 30 * time.Second,
-	};
+	}
 )
 
 func (f fileWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {

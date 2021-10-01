@@ -143,15 +143,15 @@ func (s *Station) Start() {
 
 func cleanProgramDir(dir string) error {
 	d, err := os.Open(dir)
-    if err != nil {
-        return err
-    }
-    defer d.Close()
+	if err != nil {
+		return err
+	}
+	defer d.Close()
 
 	fs, err := d.Readdirnames(-1)
-    if err != nil {
-        return err
-    }
+	if err != nil {
+		return err
+	}
 
 	for _, f := range fs {
 		if ext := filepath.Ext(f); ext == ".ts" || ext == ".m3u8" {
@@ -160,8 +160,8 @@ func cleanProgramDir(dir string) error {
 				return err
 			}
 		}
-    }
-    return nil
+	}
+	return nil
 }
 
 func (s *Station) play(d time.Duration) error {
@@ -205,7 +205,7 @@ func (s *Station) Leave(v *viewer.Viewer) {
 }
 
 var (
-	ErrShut error = errors.New("station is shut")
+	ErrShut        error = errors.New("station is shut")
 	defaultStation *Station
 )
 

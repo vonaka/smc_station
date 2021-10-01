@@ -33,7 +33,7 @@ func main() {
 	}
 	if *logger != "<stderr>" {
 		l, err := os.OpenFile(*logger, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-        check(err)
+		check(err)
 		log.SetOutput(l)
 	}
 
