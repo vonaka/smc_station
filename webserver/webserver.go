@@ -41,17 +41,12 @@ func (f fileWrapper) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	f.handler.ServeHTTP(w, r)
 }
 
-func Serve(address, staticRoot, dataDir string) error {
+func Serve(address, staticRoot string) error {
 	wrapper := fileWrapper{
 		handler:   http.FileServer(http.Dir(staticRoot)),
 		staticDir: filepath.Join(staticRoot, "program"),
 	}
 	http.Handle("/", wrapper)
-
-	//http.Handle("/", http.FileServer(http.Dir(staticRoot)))
-
-	//http.Handle("/data", http.FileServer(http.Dir(dataDir)))
-	//http.HandleFunc("/time.json", timeHandler)
 	http.HandleFunc("/ws", wsHandler)
 
 	s := &http.Server{
@@ -66,54 +61,6 @@ func Serve(address, staticRoot, dataDir string) error {
 	}
 	return err
 }
-
-// type Time struct {
-// 	Time        string `json:"time"`
-// 	DisplayName string `json:"displayName,omitempty"`
-// }
-
-// func timeHandler(w http.ResponseWriter, r *http.Request) {
-// 	w.Header().Set("content-type", "application/json")
-// 	w.Header().Set("cache-control", "no-cache")
-
-// 	fmt.Println("time handler")
-
-// 	if r.Method == "HEAD" {
-// 		return
-// 	}
-
-// 	e := json.NewEncoder(w)
-// 	e.Encode(Time{
-// 		Time: time.Now().String(),
-// 	})
-// }
-
-// type Program struct {
-// 	Type        string `json:"type"`
-// 	DisplayName string `json:"displayName,omitempty"`
-// }
-
-// Old one
-// func wsHandler(w http.ResponseWriter, r *http.Request) {
-// 	conn, err := wsUpgrader.Upgrade(w, r, nil)
-// 	if err != nil {
-// 		log.Printf("Websocket upgrade: %v", err)
-// 		return
-// 	}
-// 	go func() {
-// 		conn.WriteJSON(Program{
-// 			Type: "program",
-// 		})
-// 		fmt.Println("new client")
-// 		fmt.Println("loop...")
-// 		c := make(chan int, 2)
-// 		<-c
-// 		// err := rtpconn.StartClient(conn)
-// 		// if err != nil {
-// 		// 	log.Printf("client: %v", err)
-// 		// }
-// 	}()
-// }
 
 func wsHandler(w http.ResponseWriter, r *http.Request) {
 	conn, err := wsUpgrader.Upgrade(w, r, nil)

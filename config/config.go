@@ -44,15 +44,15 @@ func Open(path string) (*Config, error) {
 		}
 		config.Write()
 		return config, nil
+	} else {
+		c := &Config{
+			ignore: make(map[string]struct{}),
+		}
+		return c.read(path)
 	}
-
-	return read(path)
 }
 
-func read(path string) (*Config, error) {
-	c := &Config{
-		ignore: make(map[string]struct{}),
-	}
+func (c *Config) read(path string) (*Config, error) {
 	str, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
@@ -123,6 +123,11 @@ func (c *Config) String() string {
 
 func (c *Config) Write() {
 	os.WriteFile(c.path, []byte(c.String()), 0666)
+}
+
+func (c *Config) Update() error {
+	_, err := c.read(c.path)
+	return err
 }
 
 func (c *Config) ReadyToPlay() (bool, time.Duration, time.Duration) {

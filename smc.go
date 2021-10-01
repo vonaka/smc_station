@@ -39,12 +39,12 @@ func main() {
 
 	c, err := config.Open(filepath.Join(*home, *conf))
 	check(err)
-	station.Initialize(c)
 	err = hls.InitializeDataTank(c)
 	check(err)
+	station.Initialize(c)
 	station.Start()
 	fmt.Println("starting server at", *httpAddr)
-	err = webserver.Serve(*httpAddr, c.StaticDir(), c.DataDir())
+	err = webserver.Serve(*httpAddr, c.StaticDir())
 	check(err)
 }
 

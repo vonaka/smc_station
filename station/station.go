@@ -5,7 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"os/signal"
 	"path/filepath"
+	"syscall"
 	"time"
 
 	"github.com/vonaka/smc_station/config"
@@ -20,17 +22,21 @@ type Station struct {
 	leave     chan *viewer.Viewer
 	shutdown  chan struct{}
 	newViewer chan *viewer.Viewer
+	sigs      chan os.Signal
 }
 
 func New(c *config.Config) *Station {
-	return &Station{
+	s := &Station{
 		c:         c,
 		vs:        make(map[*viewer.Viewer]struct{}),
 		clock:     NewClock(),
 		leave:     make(chan *viewer.Viewer, 10),
 		shutdown:  make(chan struct{}, 1),
 		newViewer: make(chan *viewer.Viewer, 10),
+		sigs:      make(chan os.Signal, 1),
 	}
+	signal.Notify(s.sigs, syscall.SIGUSR1)
+	return s
 }
 
 func greetViewer(v *viewer.Viewer, wait bool, startTime *time.Time) {
@@ -94,6 +100,7 @@ func (s *Station) Start() {
 				for v := range s.vs {
 					greetViewer(v, true, &startTime)
 				}
+				sig := false
 				pdone := false
 				wdone := false
 			loop:
@@ -104,6 +111,12 @@ func (s *Station) Start() {
 						greetViewer(v, true, &startTime)
 					case v := <-s.leave:
 						delete(s.vs, v)
+					case <-s.sigs:
+						if pdone {
+							s.updateConfig()
+						} else {
+							sig = true
+						}
 					case <-wait:
 						wdone = true
 						if pdone {
@@ -111,12 +124,16 @@ func (s *Station) Start() {
 						}
 					case <-ready:
 						pdone = true
+						if sig {
+							s.updateConfig()
+						}
 						if wdone {
 							break loop
 						}
 					}
 				}
 			} else {
+				sig := false
 			loopOk:
 				for {
 					select {
@@ -124,7 +141,12 @@ func (s *Station) Start() {
 						s.vs[v] = struct{}{}
 					case v := <-s.leave:
 						delete(s.vs, v)
+					case <-s.sigs:
+						sig = true
 					case <-ready:
+						if sig {
+							s.updateConfig()
+						}
 						break loopOk
 					}
 				}
@@ -183,6 +205,8 @@ func (s *Station) play(d time.Duration) error {
 		case <-wait:
 			// TODO: notify the viewers that the show is over
 			return nil
+		case <-s.sigs:
+			s.updateConfig()
 		}
 	}
 	return nil
@@ -202,6 +226,16 @@ func (s *Station) AddViewer(v *viewer.Viewer) {
 
 func (s *Station) Leave(v *viewer.Viewer) {
 	s.leave <- v
+}
+
+func (s *Station) updateConfig() {
+	log.Println("updating configuration, `static` field will be ignored")
+	if err := s.c.Update(); err != nil {
+		log.Println(err)
+	}
+	if err := hls.InitializeDataTank(s.c); err != nil {
+		log.Println(err)
+	}
 }
 
 var (
