@@ -1,0 +1,8 @@
+*~
+*.conf
+data/
+static/program/
+
+.DS_Store
+.AppleDouble
+.LSOverride
