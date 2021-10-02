@@ -46,6 +46,7 @@ func Open(path string) (*Config, error) {
 		return config, nil
 	} else {
 		c := &Config{
+			path:   path,
 			ignore: make(map[string]struct{}),
 		}
 		return c.read(path)
@@ -84,10 +85,18 @@ func (c *Config) read(path string) (*Config, error) {
 			}
 		case "data":
 			check(&words, "data")
-			c.dataDir = words[1]
+			if filepath.IsAbs(words[1]) {
+				c.dataDir = words[1]
+			} else {
+				c.dataDir = filepath.Join(filepath.Dir(path), words[1])
+			}
 		case "static":
 			check(&words, "static")
-			c.staticDir = words[1]
+			if filepath.IsAbs(words[1]) {
+				c.staticDir = words[1]
+			} else {
+				c.staticDir = filepath.Join(filepath.Dir(path), words[1])
+			}
 		case "skip":
 			check(&words, "skip")
 			fallthrough
