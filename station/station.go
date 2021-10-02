@@ -93,61 +93,67 @@ func (s *Station) Start() {
 				ready <- struct{}{}
 			}()
 
-			ok, waitDuration, playDuration := s.c.ReadyToPlay()
-			if !ok {
-				startTime := time.Now().Add(waitDuration)
-				wait := time.After(waitDuration)
-				for v := range s.vs {
-					greetViewer(v, true, &startTime)
-				}
-				sig := false
-				pdone := false
-				wdone := false
-			loop:
-				for {
-					select {
-					case v := <-s.newViewer:
-						s.vs[v] = struct{}{}
+			var (
+				pdone        bool
+				sigUpd       bool = true
+				playDuration time.Duration
+			)
+			for sigUpd {
+				sigUpd = false
+				ok, waitDuration, pd := s.c.ReadyToPlay()
+				playDuration = pd
+				if !ok {
+					startTime := time.Now().Add(waitDuration)
+					wait := time.After(waitDuration)
+					for v := range s.vs {
 						greetViewer(v, true, &startTime)
-					case v := <-s.leave:
-						delete(s.vs, v)
-					case <-s.sigs:
-						if pdone {
-							s.updateConfig()
-						} else {
-							sig = true
-						}
-					case <-wait:
-						wdone = true
-						if pdone {
-							break loop
-						}
-					case <-ready:
-						pdone = true
-						if sig {
-							s.updateConfig()
-						}
-						if wdone {
-							break loop
+					}
+					wdone := false
+				loop:
+					for {
+						select {
+						case v := <-s.newViewer:
+							s.vs[v] = struct{}{}
+							greetViewer(v, true, &startTime)
+						case v := <-s.leave:
+							delete(s.vs, v)
+						case <-s.sigs:
+							sigUpd = true
+							if pdone {
+								s.updateConfig()
+								break loop
+							}
+						case <-wait:
+							wdone = true
+							if pdone {
+								break loop
+							}
+						case <-ready:
+							pdone = true
+							if sigUpd {
+								s.updateConfig()
+								break loop
+							}
+							if wdone {
+								break loop
+							}
 						}
 					}
-				}
-			} else {
-				sig := false
-			loopOk:
-				for {
-					select {
-					case v := <-s.newViewer:
-						s.vs[v] = struct{}{}
-					case v := <-s.leave:
-						delete(s.vs, v)
-					case <-s.sigs:
-						sig = true
-					case <-ready:
-						if sig {
-							s.updateConfig()
+				} else {
+					for !pdone {
+						select {
+						case v := <-s.newViewer:
+							s.vs[v] = struct{}{}
+						case v := <-s.leave:
+							delete(s.vs, v)
+						case <-s.sigs:
+							sigUpd = true
+						case <-ready:
+							if sigUpd {
+								s.updateConfig()
+							}
+							pdone = true
 						}
-						break loopOk
 					}
 				}
 			}
