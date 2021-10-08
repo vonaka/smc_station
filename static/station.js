@@ -53,7 +53,6 @@ function handleProgram(m) {
     let overlap = document.createElement('div');
     let video = document.createElement('video');
     let initial_source = '/program/now.m3u8?version=';
-    //let initial_source = '/program/stup.m3u8?version=';
     let video_height = "80vmin";
     let version = Math.floor((Math.random() * 10000) + 1);
     let source = initial_source.concat(version.toString());
@@ -81,15 +80,16 @@ function handleProgram(m) {
     video.id = 'now';
     video.style.height = video_height;
 
-    if(video.canPlayType('application/vnd.apple.mpegurl')) {
-        video.src = source;
-        video.addEventListener('loadedmetadata', onload);
-    } else if(Hls.isSupported()) {
+    if(Hls.isSupported()) {
         let hls = new Hls();
         hls.loadSource(source);
         hls.attachMedia(video);
         hls.on(Hls.Events.MANIFEST_PARSED, onload);
+    } else if(video.canPlayType('application/vnd.apple.mpegurl')) {
+        video.src = source;
+        video.addEventListener('loadedmetadata', onload);
     }
+    // TODO: else ?
 
     let timer = document.createElement('p');
     timer.id = 'timer';
