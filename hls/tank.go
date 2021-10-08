@@ -2,6 +2,7 @@ package hls
 
 import (
 	"io/ioutil"
+	"log"
 	"math/rand"
 	"os"
 	"os/exec"
@@ -21,6 +22,7 @@ type Tank struct {
 type chunk struct {
 	filename    string
 	duration    time.Duration
+	vcodec      string
 	videostream []int
 	audiostream []int
 }
@@ -123,15 +125,17 @@ func (t *Tank) fillChunks(c *config.Config) error {
 				if !toSkip && check(v.Name()) {
 					filename := filepath.Join(dir, v.Name())
 					duration, err := videoDuration(filename)
-					// skip if can't get duration
-					// TODO: log skipped files
+					codec := videoCodec(filename)
 					if err == nil {
 						t.cs = append(t.cs, chunk{
 							filename:    filename,
 							duration:    duration,
+							vcodec:      codec,
 							videostream: copySlice(videos),
 							audiostream: copySlice(audios),
 						})
+					} else {
+						log.Println("skipping", filename)
 					}
 				}
 			}
@@ -216,10 +220,24 @@ func videoDuration(filename string) (time.Duration, error) {
 		"-of", "default=noprint_wrappers=1:nokey=1",
 		filename).Output()
 	if err != nil {
+		log.Println("videoDuration:", err)
 		return time.Duration(0), err
 	}
 	lenStr := string(strings.Split(string(len), "\n")[0]) + "s"
 	return time.ParseDuration(lenStr)
+}
+
+func videoCodec(filename string) string {
+	ls, err := exec.Command("ffprobe", "-v", "error",
+		"-select_streams", "v:0",
+		"-show_entries", "stream=codec_name",
+		"-of", "default=noprint_wrappers=1:nokey=1",
+		filename).Output()
+	if err != nil {
+		log.Println("videoCodec:", err, filename, "vcodec = none")
+		return "none"
+	}
+	return strings.Split(string(ls), "\n")[0]
 }
 
 func (c chunk) String() string {

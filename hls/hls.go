@@ -100,23 +100,24 @@ func (p *Program) Write(filename string) error {
 	for i, c := range cs {
 		ffmpeg := "ffmpeg -hide_banner -loglevel error -i "
 		ffmpeg += "\"" + c.filename + "\""
-		ffmpeg += " -filter_complex '"
+		if c.vcodec == "h264" {
+			ffmpeg += " -vcodec copy"
+		} else {
+			ffmpeg += " -crf 17"
+			ffmpeg += " -vcodec h264"
+		}
 		// FIXME: for now assumed only one video stream
-		ffmpeg += fmt.Sprintf("[0:v:%v]", c.videostream[0])
+		ffmpeg += fmt.Sprintf(" -map 0:v")
+		ffmpeg += " -acodec aac"
 		// TODO: use all audiostreams ?
 		for j := 0; j < alen; j++ {
-			ffmpeg += fmt.Sprintf("[0:a:%v]", c.audiostream[j])
+			ffmpeg += fmt.Sprintf(" -map 0:a:%v", c.audiostream[j])
 		}
-		ffmpeg += fmt.Sprintf(" concat=n=1:v=1:a=%v [v] [a]'", alen)
-		ffmpeg += " -map '[v]'"
-		ffmpeg += " -map '[a]'"
 		ffmpeg += " -metadata service_name='program'"
+		ffmpeg += " -pix_fmt yuv420p"
 		ffmpeg += " -f hls"
-		ffmpeg += " -hls_time 9"
 		ffmpeg += " -hls_list_size 0"
 		ffmpeg += " -hls_segment_type mpegts"
-		//ffmpeg += " -start_number 140"
-		//ffmpeg += " -hls_segment_filename program%01d.ts"
 		part := fmt.Sprintf("%v_%v_part.m3u8", f, i)
 		ffmpeg += " " + part
 		log.Printf("hls: %v\n%v\n", c.filename, ffmpeg)
