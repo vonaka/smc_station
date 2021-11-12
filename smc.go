@@ -37,7 +37,11 @@ func main() {
 		log.SetOutput(l)
 	}
 
-	c, err := config.Open(filepath.Join(*home, *conf))
+	configFile := *conf
+	if !filepath.IsAbs(configFile) {
+		configFile = filepath.Join(*home, *conf)
+	}
+	c, err := config.Open(configFile)
 	check(err)
 	err = hls.InitializeDataTank(c)
 	check(err)
