@@ -101,7 +101,19 @@ func (c *Config) read(path string) (*Config, error) {
 			check(&words, "skip")
 			fallthrough
 		case "ignore":
-			f := strings.Join(words[1:], " ")
+			f := ""
+			for _, w := range words[1:] {
+				if w == "#" {
+					break
+				} else if f != "" {
+					f += " " + w
+				} else {
+					f = w
+				}
+			}
+			if f == "" {
+				continue
+			}
 			if strings.HasPrefix(f, "\"") && strings.HasSuffix(f, "\"") {
 				f = strings.Trim(f, "\"")
 			}
