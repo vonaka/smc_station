@@ -9,7 +9,7 @@ Usage
 Start the station with an appropriate configuration file:
 
 ```bash
-go run ./smc.go -home ./ -config smc.conf
+go run ./smc.go -home ./ -config smc.conf -log smc.log
 ```
 
 At this point the station is available at `http://localhost:8080`.
