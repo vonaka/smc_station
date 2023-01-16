@@ -3,6 +3,8 @@ SMC
 
 Saturday-Morning Cartoon station.
 
+[![Go Report Card](https://goreportcard.com/report/github.com/vonaka/smc_station)](https://goreportcard.com/report/github.com/vonaka/smc_station)
+
 Usage
 -----
 
