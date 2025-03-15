@@ -34,12 +34,12 @@ func MakeProgram(c *config.Config) (*Program, error) {
 	if p.end == 0 {
 		p.end = 1
 	}
-	if l := len(p.tank.cs); p.end > l {
+	if l := len(p.tank.cs); p.end >= l {
 		p.end = l
 	} else if d := p.tank.ds[p.end-1]; d < c.Duration() {
-		for p.end <= l && d < c.Duration() {
-			p.end++
+		for p.end < l && d < c.Duration() {
 			d = p.tank.ds[p.end-1]
+			p.end++
 		}
 	}
 	return p, nil
